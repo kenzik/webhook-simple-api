@@ -1,0 +1,14 @@
+{
+  "webhook": {  
+    "firebase": "https://webhook.firebaseio.com",
+    "username": "<webhook username/email>",
+    "password": "<webhook password>",
+    "secretKey": "<webhook secretKey found in .firebase.conf>",
+    "siteName": "<webhook siteName found in .firebase.conf>"
+  },
+  "server" : { 
+    "name": "Webhook Content API",
+    "port": 8000,
+    "version": "0.0.1"
+  }
+}
