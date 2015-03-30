@@ -6,6 +6,9 @@ var restify = require('restify');
 // Setup Firebase
 var FB = new Firebase(config.webhook.firebase + '/buckets/' + config.webhook.siteName + '/' + config.webhook.secretKey + '/dev');
 
+// Content types
+var contentTypes = [];
+
 // Login to Firebase
 FB.authWithPassword({
   email: config.webhook.username,
@@ -21,32 +24,52 @@ server.use(restify.acceptParser(server.acceptable));
 server.use(restify.queryParser());
 server.use(restify.bodyParser());
 
+// Populate Content Types
+FB.child('contentType').once('value', function(s) {
+  contentTypes = _.keys(s.val());
+}, function(e) {
+  // Catch error
+});
+
 // Setup routes
 // ------------
 
 // Return all content types as array
 server.get('/content-types', function(req, res, next) {
-  FB.child('contentType').once('value', function(s) {
-    res.send(200,_.keys(s.val()));
-  });
+  res.send(200,contentTypes);
   return next();
 });
 
 // Get all content type entries as array: /content-type/foo
 // Get a content type entry as object by slug /content-type/foo?slug=bar
 server.get('/content-type/:type', function(req,res,next) {
-  FB.child('data/' + req.params.type).once('value', function(s) {
-    if(req.query.slug) {
-      res.send(200,_.filter(s.val(), function(n) {
-        return n.slug == req.query.slug;
-      })[0]);      
-    } else if (req.query.something_else) {
-      // Filter on something_else
-    } 
-    else {
-      res.send(200,_.values(s.val()));
-    }
-  });
+
+  var contentType = req.params.type;
+  var slug = req.query.slug || false;
+
+  if(contentTypes.indexOf(contentType) == -1) {
+    res.send(404,'Not Found: ' + contentType );
+  } else {
+    FB.child('data/' + contentType).once('value', function(s) {
+      if(slug) {
+        var page = _.filter(s.val(), function(n) {
+          return n.slug == slug;
+        })[0];
+        if(typeof page !== 'undefined' && page.name) {
+          res.send(200,page);
+        } else {
+          res.send(404,'Page Not Found: ' + slug)
+        }
+      } else if (req.query.something_else) {
+        // Filter on something_else
+      } 
+      else {
+        res.send(200,_.values(s.val()));
+      }
+    }, function(e) {
+      return(500,'Error accessing "' + contentType + '".');
+    });
+  }
   return next();
 });
 
