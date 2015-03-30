@@ -1,0 +1,25 @@
+{
+  "name": "webhook-simple-api",
+  "version": "0.0.1",
+  "description": "Simple Webhook API ",
+  "main": "app.js",
+  "dependencies": {
+    "restify": "^3.0.1",
+    "lodash": "^3.6.0",
+    "firebase": "^2.2.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NetCrafters/webhook-simple-api.git"
+  },
+  "author": "david@kenzik.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/NetCrafters/webhook-simple-api/issues"
+  },
+  "homepage": "https://github.com/NetCrafters/webhook-simple-api"
+}

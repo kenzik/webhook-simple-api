@@ -24,30 +24,28 @@ server.use(restify.bodyParser());
 // Setup routes
 // ------------
 
-// Return all content types
+// Return all content types as array
 server.get('/content-types', function(req, res, next) {
   FB.child('contentType').once('value', function(s) {
-    // Todo - Pluck out the controls from each type
     res.send(200,_.keys(s.val()));
   });
   return next();
 });
 
-// Get all content type entries: /content-type/foo
-// Get by slug /content-type/foo?slug=bar
+// Get all content type entries as array: /content-type/foo
+// Get a content type entry as object by slug /content-type/foo?slug=bar
 server.get('/content-type/:type', function(req,res,next) {
   FB.child('data/' + req.params.type).once('value', function(s) {
     if(req.query.slug) {
       res.send(200,_.filter(s.val(), function(n) {
         return n.slug == req.query.slug;
-      }));      
+      })[0]);      
     } else if (req.query.something_else) {
       // Filter on something_else
     } 
     else {
       res.send(200,_.values(s.val()));
     }
-
   });
   return next();
 });
@@ -57,6 +55,9 @@ server.listen(config.server.port, function() {
   console.log('%s listening at %s', server.name, server.url);
 });
 
+
+// Utils
+//
 function fbAuthHandler(err,authData) {
   console.log('Firebase: Connecting to: ' + config.webhook.firebase + '/buckets/' + config.webhook.siteName + '/' + config.webhook.secretKey + '/dev');
   if(err) {
