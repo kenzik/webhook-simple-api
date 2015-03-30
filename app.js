@@ -59,11 +59,11 @@ server.listen(config.server.port, function() {
 // Utils
 //
 function fbAuthHandler(err,authData) {
-  console.log('Firebase: Connecting to: ' + config.webhook.firebase + '/buckets/' + config.webhook.siteName + '/' + config.webhook.secretKey + '/dev');
+  console.log('Connecting to: ' + config.webhook.firebase + '/buckets/' + config.webhook.siteName + '/' + config.webhook.secretKey + '/dev');
   if(err) {
     console.log(err);
     exit;
   } else {    
-    console.log('Firebase: Authentication Successful as ' + config.webhook.username);
+    console.log('Connected. Firebase authentication successful as ' + config.webhook.username);
   }
 }
