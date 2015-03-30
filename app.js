@@ -18,10 +18,13 @@ var server = restify.createServer( {
   version: config.server.version
 });
 server.use(restify.acceptParser(server.acceptable));
-//server.use(restify.queryParser());
+server.use(restify.queryParser());
 server.use(restify.bodyParser());
 
 // Setup routes
+// ------------
+
+// Return all content types
 server.get('/content-types', function(req, res, next) {
   FB.child('contentType').once('value', function(s) {
     // Todo - Pluck out the controls from each type
@@ -30,19 +33,23 @@ server.get('/content-types', function(req, res, next) {
   return next();
 });
 
+// Get all content type entries: /content-type/foo
+// Get by slug /content-type/foo?slug=bar
 server.get('/content-type/:type', function(req,res,next) {
   FB.child('data/' + req.params.type).once('value', function(s) {
-    res.send(200,s.val());
+    if(req.query.slug) {
+      res.send(200,_.filter(s.val(), function(n) {
+        return n.slug == req.query.slug;
+      }));      
+    } else if (req.query.something_else) {
+      // Filter on something_else
+    } 
+    else {
+      res.send(200,_.values(s.val()));
+    }
+
   });
   return next();
-});
-
-server.get(/^\/content-type\/([a-zA-Z0-9_\.~-]+)\/(.*)/, function(req,res,next) {
-  FB.child('data/' + req.params[0]).once('value', function(s) {
-    res.send(200,_.filter(s.val(), function(n) {
-      return n.slug == req.params[1];
-    }));
-  });
 });
 
 // Listen
