@@ -28,15 +28,6 @@ server.use(restify.acceptParser(server.acceptable));
 server.use(restify.queryParser());
 server.use(restify.bodyParser());
 
-
-// Populate Content Types
-FB.child('contentType').once('value', function(s) {
-  contentTypes = s.val();
-  //contentTypes = _.keys(s.val());
-}, function(e) {
-  // Catch error
-});
-
 // Setup routes
 // ------------
 
@@ -53,36 +44,44 @@ server.get('/content-type/:type', function(req,res,next) {
   var contentType = req.params.type;
   var slug = req.query.slug || false;
 
-  if(contentTypes.indexOf(contentType) == -1) {
-    res.send(404,'Not Found: ' + contentType );
-  } else {
-    FB.child('data/' + contentType).once('value', function(s) {
-      if(slug) {
+  // Get current content-types
+  FB.child('contentType').once('value', function(s) {
+    contentTypes = s.val();
+    if(_.keys(contentTypes).indexOf(contentType) == -1) {
+      res.send(404,'Not Found: ' + contentType );
+    } else {
+      FB.child('data/' + contentType).once('value', function(s) {
+        if(slug) {
 
-        var page = _.filter(s.val(), function(n,i) {
-          n['_id']=i;
-          return n.slug == slug;
-        })[0];
-
-        if(typeof page !== 'undefined' && page.name) {
-          res.send(200,page);
-        } else {
-          res.send(404,'Page Not Found: ' + slug)
+          // TODO - Setup contingency for finding page in case Webhook doesn't implement slug storage
+          var page={};
+          _.forEach(s.val(), function(n, i) {
+            if(n.slug === slug) {
+              page[i] = n;
+            }
+          });
+          if(typeof page !== 'undefined' && Object.keys(page).length) {
+            res.send(200,page);
+          } else {
+            res.send(404,'Page Not Found: ' + slug)
+          }
+        } else if (req.query.something_else) {
+          // Filter on something_else
         }
-      } else if (req.query.something_else) {
-        // Filter on something_else
-      } 
-      else {
-        var pages = _.filter(s.val(), function(n,i) {
-          n['_id'] = i;
-          return true;
-        });
-        res.send(200,pages);
-      }
-    }, function(e) {
-      return(500,'Error accessing "' + contentType + '".');
-    });
-  }
+        else {
+          res.send(200, s.val());
+        }
+      }, function(e) {
+        return(500,'Error accessing "' + contentType + '".');
+      });
+    }
+
+
+  }, function(e) {
+    // Catch error
+  });
+
+
   return next();
 });
 
