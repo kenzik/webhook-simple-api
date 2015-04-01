@@ -20,13 +20,19 @@ var server = restify.createServer( {
   name: config.server.name,
   version: config.server.version
 });
+
+// Middleware
+//server.use(restify.CORS());
+server.use(restify.fullResponse());
 server.use(restify.acceptParser(server.acceptable));
 server.use(restify.queryParser());
 server.use(restify.bodyParser());
 
+
 // Populate Content Types
 FB.child('contentType').once('value', function(s) {
-  contentTypes = _.keys(s.val());
+  contentTypes = s.val();
+  //contentTypes = _.keys(s.val());
 }, function(e) {
   // Catch error
 });
@@ -52,9 +58,12 @@ server.get('/content-type/:type', function(req,res,next) {
   } else {
     FB.child('data/' + contentType).once('value', function(s) {
       if(slug) {
-        var page = _.filter(s.val(), function(n) {
+
+        var page = _.filter(s.val(), function(n,i) {
+          n['_id']=i;
           return n.slug == slug;
         })[0];
+
         if(typeof page !== 'undefined' && page.name) {
           res.send(200,page);
         } else {
@@ -64,7 +73,11 @@ server.get('/content-type/:type', function(req,res,next) {
         // Filter on something_else
       } 
       else {
-        res.send(200,_.values(s.val()));
+        var pages = _.filter(s.val(), function(n,i) {
+          n['_id'] = i;
+          return true;
+        });
+        res.send(200,pages);
       }
     }, function(e) {
       return(500,'Error accessing "' + contentType + '".');

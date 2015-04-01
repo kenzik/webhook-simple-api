@@ -20,5 +20,5 @@ It supports the following routes:
 2. ```/content-type/:type``` - To retrieve all records for a particular content type
 3. ```/content-type/:type?slug=:slug``` - To retrieve a single content record via slug
 
-NOTE: There seems to be a [slug bug](http://forums.webhook.com/t/possible-bug-no-slug-on-initial-save/604) in Webhook, so YMMV with #3.
+NOTE: There seems to be a [slug bug](https://github.com/webhook/webhook-cms/issues/225) in Webhook, so YMMV with #3.
 
