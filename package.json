@@ -4,9 +4,11 @@
   "description": "Simple Webhook API ",
   "main": "app.js",
   "dependencies": {
-    "restify": "^3.0.1",
+    "firebase": "^2.2.3",
     "lodash": "^3.6.0",
-    "firebase": "^2.2.3"
+    "moment": "^2.9.0",
+    "restify": "^3.0.1",
+    "uslug": "^1.0.3"
   },
   "devDependencies": {},
   "scripts": {

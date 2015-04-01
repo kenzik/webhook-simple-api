@@ -2,6 +2,8 @@ var Firebase=require('firebase');
 var config=require('./config.json');
 var _ = require('lodash');
 var restify = require('restify');
+var moment = require('moment');
+var uslug = require('uslug');
 
 // Setup Firebase
 var FB = new Firebase(config.webhook.firebase + '/buckets/' + config.webhook.siteName + '/' + config.webhook.secretKey + '/dev');
@@ -33,7 +35,12 @@ server.use(restify.bodyParser());
 
 // Return all content types as array
 server.get('/content-types', function(req, res, next) {
-  res.send(200,contentTypes);
+  FB.child('contentType').once('value', function(s) {
+    contentTypes= s.val();
+    res.send(200,contentTypes);
+  }, function(e) {
+    res.send(500,e);
+  });
   return next();
 });
 
@@ -50,19 +57,47 @@ server.get('/content-type/:type', function(req,res,next) {
     if(_.keys(contentTypes).indexOf(contentType) == -1) {
       res.send(404,'Not Found: ' + contentType );
     } else {
+
+      var page={};
+      var pageValue;
+
       FB.child('data/' + contentType).once('value', function(s) {
         if(slug) {
 
-          // TODO - Setup contingency for finding page in case Webhook doesn't implement slug storage
-          var page={};
           _.forEach(s.val(), function(n, i) {
+            page[i]=n;
+            pageValue=n;
+            // We found a slug that matches the request, send it back
             if(n.slug === slug) {
-              page[i] = n;
+              res.send(200,page);
+              return next;
+
+            } else {
+
+              var pageSlug = slugger({
+                name: pageValue.name,
+                publish_date: moment(pageValue.publish_date)
+              }, contentType, contentTypes[contentType].customUrls ? contentTypes[contentType].customUrls : null);
+              console.log(parseCustomUrl(pageSlug,pageValue,contentType));
+
+
             }
           });
+
+          process.exit();
+
           if(typeof page !== 'undefined' && Object.keys(page).length) {
             res.send(200,page);
           } else {
+//            console.log(pageValue);
+            process.exit();
+            // Did not find it by the proper slug, check slugger code
+            var pageSlug = slugger({
+              name: pageValue.name,
+              publish_date: moment(pageValue.publish_date)
+            }, contentType, contentTypes[contentType].customUrls ? contentTypes[contentType].customUrls : null);
+            console.log(parseCustomUrl(pageSlug,pageValue,contentType));
+
             res.send(404,'Page Not Found: ' + slug)
           }
         } else if (req.query.something_else) {
@@ -101,4 +136,56 @@ function fbAuthHandler(err,authData) {
   } else {    
     console.log('Connected. Firebase authentication successful as ' + config.webhook.username);
   }
+}
+
+/*global uslug*/
+function slugger(item, type, customUrls) {
+  var tmpSlug = '';
+  tmpSlug = uslug(item.name).toLowerCase();
+
+  if(customUrls && customUrls.individualUrl) {
+    tmpSlug = parseCustomUrl(customUrls.individualUrl, item, type) + '/' + tmpSlug;
+  }
+
+  if(customUrls && customUrls.listUrl) {
+    tmpSlug = customUrls.listUrl + '/' + tmpSlug;
+  } else {
+    tmpSlug = type + '/' + tmpSlug;
+  }
+  return tmpSlug;
+}
+
+function parseCustomUrl (url, object, type) {
+  //console.log(url);
+  var publishDate = object.publish_date ? object.publish_date : object;
+
+  publishDate = moment(publishDate);
+
+  function replacer(match, timeIdent, offset, string){
+    if(timeIdent === 'Y') {
+      return publishDate.format('YYYY').toLowerCase();
+    } else if (timeIdent === 'y') {
+      return publishDate.format('YY').toLowerCase();
+    } else if (timeIdent === 'm') {
+      return publishDate.format('MM').toLowerCase();
+    } else if (timeIdent === 'n') {
+      return publishDate.format('M').toLowerCase();
+    } else if (timeIdent === 'F') {
+      return publishDate.format('MMMM').toLowerCase();
+    } else if (timeIdent === 'M') {
+      return publishDate.format('MMM').toLowerCase();
+    } else if (timeIdent === 'd') {
+      return publishDate.format('DD').toLowerCase();
+    } else if (timeIdent === 'j') {
+      return publishDate.format('D').toLowerCase();
+    } else if (timeIdent === 'T') {
+      return type.toLowerCase();
+    } else {
+      return match;
+    }
+  }
+
+  url = url.replace(/#(\w)/g, replacer);
+  console.log(url);
+  return url;
 }
