@@ -92,12 +92,18 @@ server.get('/content-type/:type', function(req,res,next) {
           _.forEach(s.val(), function(n, i) {
 
               if(i === req.query.id) {
+                pageLocated = true;
                 res.send(200,processPage(n,i,contentType));
                 return next;
               }
           });
 
-          return next;
+
+          if(!pageLocated) {
+            res.send(404, 'Page Not Found: ' + slug);
+            return next;
+          }
+
         }
         else {
           // Deny any other params not defined
