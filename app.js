@@ -45,6 +45,17 @@ server.get('/content-types', function(req, res, next) {
   return next();
 });
 
+server.get('/menu', function(req, res, next) {
+  FB.child('data/menus').once('value', function(s) {
+
+    // TODO: Process menus, lookup related pages, etc.
+
+    res.send(200,s.val());
+
+  });
+  return next();
+});
+
 // Get all content type entries as array: /content-type/foo
 // Get a content type entry as object by slug /content-type/foo?slug=bar
 // Get a content type entry as object by FB key id /content-type/foo?id=-FJfkfjjf234r334fzznFF-
