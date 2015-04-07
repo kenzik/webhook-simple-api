@@ -12,6 +12,7 @@ var FB = new Firebase(config.webhook.firebase + '/buckets/' + config.webhook.sit
 var contentTypes = [];
 
 // Login to Firebase
+console.log('Connecting to: ' + config.webhook.firebase + '/buckets/' + config.webhook.siteName + '/' + config.webhook.secretKey + '/dev');
 FB.authWithPassword({
   email: config.webhook.username,
   password: config.webhook.password
@@ -55,59 +56,66 @@ server.get('/content-type/:type', function(req,res,next) {
   FB.child('contentType').once('value', function(s) {
     contentTypes = s.val();
     if(_.keys(contentTypes).indexOf(contentType) == -1) {
-      res.send(404,'Not Found: ' + contentType );
+      res.send(404,'Content Type Not Found: ' + contentType );
     } else {
 
       var page={};
       var pageValue;
+      var pageLocated = false;
 
       FB.child('data/' + contentType).once('value', function(s) {
         if(slug) {
-
           _.forEach(s.val(), function(n, i) {
             page[i]=n;
             pageValue=n;
             // We found a slug that matches the request, send it back
             if(n.slug === slug) {
-              res.send(200,page);
+              pageLocated = true;
+              res.send(200,page[i]);
               return next;
-
             } else {
-
+              // Work the slug
               var pageSlug = slugger({
                 name: pageValue.name,
                 publish_date: moment(pageValue.publish_date)
               }, contentType, contentTypes[contentType].customUrls ? contentTypes[contentType].customUrls : null);
-              console.log(parseCustomUrl(pageSlug,pageValue,contentType));
 
+              // TODO: Do better checking here, to account for the # placeholders
+              // For now this will be fine.
+              if(pageSlug.indexOf(slug) !== -1) {
+                pageLocated = true;
+                res.send(200,page[i]);
+                return next;
+              }
 
             }
           });
 
-          process.exit();
-
-          if(typeof page !== 'undefined' && Object.keys(page).length) {
-            res.send(200,page);
-          } else {
-//            console.log(pageValue);
-            process.exit();
-            // Did not find it by the proper slug, check slugger code
-            var pageSlug = slugger({
-              name: pageValue.name,
-              publish_date: moment(pageValue.publish_date)
-            }, contentType, contentTypes[contentType].customUrls ? contentTypes[contentType].customUrls : null);
-            console.log(parseCustomUrl(pageSlug,pageValue,contentType));
-
-            res.send(404,'Page Not Found: ' + slug)
+          if(!pageLocated) {
+            res.send(404, 'Page Not Found: ' + slug);
+            return next;
           }
+
         } else if (req.query.something_else) {
-          // Filter on something_else
+          // Filter on something_else in req.query
+          res.send(500,'Invalid Parameter');
+          return next;
         }
         else {
-          res.send(200, s.val());
+          // Deny any other params not defined
+          if(s.val() && !pageLocated) {
+            // TODO: Ignore any unrecognized queries and send back all pages
+            // For now, just send back all records
+            res.send(200, s.val());
+            return next;
+          } else {
+            res.send(404, 'Page Not Found');
+            return next;
+          }
         }
       }, function(e) {
-        return(500,'Error accessing "' + contentType + '".');
+        res.send(500,'Error accessing "' + contentType + '".');
+        return next;
       });
     }
 
@@ -129,15 +137,18 @@ server.listen(config.server.port, function() {
 // Utils
 //
 function fbAuthHandler(err,authData) {
-  console.log('Connecting to: ' + config.webhook.firebase + '/buckets/' + config.webhook.siteName + '/' + config.webhook.secretKey + '/dev');
   if(err) {
     console.log(err);
-    exit;
+    process.exit();
   } else {    
     console.log('Connected. Firebase authentication successful as ' + config.webhook.username);
   }
 }
 
+
+// Functionality from webhook-cms
+// https://github.com/webhook/webhook-cms/issues/225
+//
 /*global uslug*/
 function slugger(item, type, customUrls) {
   var tmpSlug = '';
@@ -155,8 +166,10 @@ function slugger(item, type, customUrls) {
   return tmpSlug;
 }
 
+// Functionality from webhook-cms
+// https://github.com/webhook/webhook-cms/issues/225
+//
 function parseCustomUrl (url, object, type) {
-  //console.log(url);
   var publishDate = object.publish_date ? object.publish_date : object;
 
   publishDate = moment(publishDate);
@@ -186,6 +199,5 @@ function parseCustomUrl (url, object, type) {
   }
 
   url = url.replace(/#(\w)/g, replacer);
-  console.log(url);
   return url;
 }
