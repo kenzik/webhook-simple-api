@@ -93,6 +93,7 @@ server.get('/content-type/:type', function(req,res,next) {
 
               if(i === req.query.id) {
                 res.send(200,processPage(n,i,contentType));
+                return next;
               }
           });
 
