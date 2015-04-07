@@ -59,6 +59,7 @@ server.get('/content-type/:type', function(req,res,next) {
     contentTypes = s.val();
     if(_.keys(contentTypes).indexOf(contentType) == -1) {
       res.send(404,'Content Type Not Found: ' + contentType );
+      return next;
     } else {
 
       var page={};
