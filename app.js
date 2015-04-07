@@ -98,7 +98,6 @@ server.get('/content-type/:type', function(req,res,next) {
               }
           });
 
-
           if(!pageLocated) {
             res.send(404, 'Page Not Found: ' + slug);
             return next;
