@@ -139,11 +139,22 @@ function processMenu(menu,id) {
   menu['_id']=id;
 
   // TODO: Populate children
+  if(menu.children) {
+    var children = [];
+    _.forEach(menu.children, function(m,i) {
+      children.push(processMenu(m.split(' ')[1]));
+    });
+    menu.children=children;
+  }
 
   // TODO: Find page for creating URL
 
   return menu;
 
+}
+
+function processMenuChildren(children) {
+  var children = [];
 }
 
 // Functionality from webhook-cms
