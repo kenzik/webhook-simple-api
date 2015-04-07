@@ -70,12 +70,11 @@ server.get('/content-type/:type', function(req,res,next) {
     contentTypes = s.val();
     if(_.keys(contentTypes).indexOf(contentType) == -1) {
       res.send(404,'Content Type Not Found: ' + contentType );
-      return next;
     } else {
 
-      var page={};
-      var pageLocated = false;
-      var pages=[];
+      var entry={};
+      var entryLocated = false;
+      var entries=[];
 
       FB.child('data/' + contentType).once('value', function(s) {
 
@@ -83,19 +82,17 @@ server.get('/content-type/:type', function(req,res,next) {
           _.forEach(s.val(), function(n, i) {
             
             // Clean things up a bit
-            page = processPage(n,i,contentType);
+            entry = processContentEntry(n,i,contentType);
 
             // We found a slug that matches the request, send it back
-            if(page.slug === slug) {
-              pageLocated = true;
-              res.send(200,page);
-              return next;
+            if(entry.slug === slug) {
+              entryLocated = true;
+              res.send(200,entry);
             } 
           });
 
-          if(!pageLocated) {
+          if(!entryLocated) {
             res.send(404, 'Page Not Found: ' + slug);
-            return next;
           }
 
         } else if (req.query.id) {
@@ -103,39 +100,34 @@ server.get('/content-type/:type', function(req,res,next) {
           _.forEach(s.val(), function(n, i) {
 
               if(i === req.query.id) {
-                pageLocated = true;
-                res.send(200,processPage(n,i,contentType));
-                return next;
+                entryLocated = true;
+                res.send(200,processContentEntry(n,i,contentType));
               }
           });
 
-          if(!pageLocated) {
+          if(!entryLocated) {
             res.send(404, 'Page Not Found: ' + slug);
-            return next;
           }
 
         }
         else {
           // Deny any other params not defined
-          if(s.val() && !pageLocated) {
-            // TODO: Ignore any unrecognized queries and send back all pages
+          if(s.val() && !entryLocated) {
+            // TODO: Ignore any unrecognized queries and send back all entries
             // For now, just send back all records
 
             // Clean things up a bit
             _.forEach(s.val(), function(n, i) { 
-              pages.push(processPage(n,i,contentType));
+              entries.push(processContentEntry(n,i,contentType));
             });
 
-            res.send(200, pages);
-            return next;
+            res.send(200, entries);
           } else {
             res.send(404, 'Page Not Found');
-            return next;
           }
         }
       }, function(e) {
         res.send(500,'Error accessing "' + contentType + '".');
-        return next;
       });
     }
 
@@ -164,21 +156,26 @@ function fbAuthHandler(err,authData) {
   }
 }
 
-function processPage(page,id,contentType) {  
+function processContentEntry(entry,id,contentType) {  
   // console.log(page);
-  if(!page) return false;
-  page['_id']=id;
+  if(!entry) return false;
+  entry['_id']=id;
 
-  if(!page.slug) {
-    var pageSlug = slugger({
-      name: page.name,
-      publish_date: moment(page.publish_date)
+  if(!entry.slug) {
+    var entrySlug = slugger({
+      name: entry.name,
+      publish_date: moment(entry.publish_date)
     }, contentType, contentTypes[contentType].customUrls ? contentTypes[contentType].customUrls : null);
-    page['slug']=pageSlug.substring(pageSlug.indexOf('/') + 1);
+    entry['slug']=entrySlug.substring(entrySlug.indexOf('/') + 1);
   }
 
-  return page;
+  return entry;
 }
+
+function getEntry(req,contentType) {
+
+}
+
 
 // Functionality from webhook-cms
 // https://github.com/webhook/webhook-cms/issues/225
