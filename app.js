@@ -54,41 +54,30 @@ server.get('/content-type/:type', function(req,res,next) {
 
   // Get current content-types
   FB.child('contentType').once('value', function(s) {
+
     contentTypes = s.val();
     if(_.keys(contentTypes).indexOf(contentType) == -1) {
       res.send(404,'Content Type Not Found: ' + contentType );
     } else {
 
       var page={};
-      var pageValue;
       var pageLocated = false;
+      var pages=[];
 
       FB.child('data/' + contentType).once('value', function(s) {
+
         if(slug) {
           _.forEach(s.val(), function(n, i) {
-            page[i]=n;
-            pageValue=n;
+            
+            // Clean things up a bit
+            page = processPage(n,i,contentType);
+
             // We found a slug that matches the request, send it back
-            if(n.slug === slug) {
+            if(page.slug === slug) {
               pageLocated = true;
-              res.send(200,page[i]);
+              res.send(200,page);
               return next;
-            } else {
-              // Work the slug
-              var pageSlug = slugger({
-                name: pageValue.name,
-                publish_date: moment(pageValue.publish_date)
-              }, contentType, contentTypes[contentType].customUrls ? contentTypes[contentType].customUrls : null);
-
-              // TODO: Do better checking here, to account for the # placeholders
-              // For now this will be fine.
-              if(pageSlug.indexOf(slug) !== -1) {
-                pageLocated = true;
-                res.send(200,page[i]);
-                return next;
-              }
-
-            }
+            } 
           });
 
           if(!pageLocated) {
@@ -106,7 +95,13 @@ server.get('/content-type/:type', function(req,res,next) {
           if(s.val() && !pageLocated) {
             // TODO: Ignore any unrecognized queries and send back all pages
             // For now, just send back all records
-            res.send(200, s.val());
+
+            // Clean things up a bit
+            _.forEach(s.val(), function(n, i) { 
+              pages.push(processPage(n,i,contentType));
+            });
+
+            res.send(200, pages);
             return next;
           } else {
             res.send(404, 'Page Not Found');
@@ -145,6 +140,21 @@ function fbAuthHandler(err,authData) {
   }
 }
 
+function processPage(page,id,contentType) {  
+  // console.log(page);
+  if(!page) return false;
+  page['_id']=id;
+
+  if(!page.slug) {
+    var pageSlug = slugger({
+      name: page.name,
+      publish_date: moment(page.publish_date)
+    }, contentType, contentTypes[contentType].customUrls ? contentTypes[contentType].customUrls : null);
+    page['slug']=pageSlug.substring(pageSlug.indexOf('/') + 1);
+  }
+
+  return page;
+}
 
 // Functionality from webhook-cms
 // https://github.com/webhook/webhook-cms/issues/225

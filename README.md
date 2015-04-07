@@ -17,8 +17,8 @@ This is a simple node.js application that uses [restify](http://restifyjs.com/) 
 It supports the following routes:
 
 1. ```/content-types``` - To retrieve an array of content types
-2. ```/content-type/:type``` - To retrieve all records for a particular content type
-3. ```/content-type/:type?slug=:slug``` - To retrieve a single content record via slug
+2. ```/content-type/:type``` - To retrieve an array of all records for a particular content type
+3. ```/content-type/:type?slug=:slug``` - To retrieve one content type record via slug
 
 When requesting content via a slug (#3), it will check for an explicit slug first (set during content creation). If it does not have a set slug, it will compare the slug parameter to a default slug (see note below.)
 
