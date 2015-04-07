@@ -85,9 +85,15 @@ server.get('/content-type/:type', function(req,res,next) {
             return next;
           }
 
-        } else if (req.query.something_else) {
-          // Filter on something_else in req.query
-          res.send(500,'Invalid Parameter');
+        } else if (req.query.id) {
+
+          _.forEach(s.val(), function(n, i) {
+
+              if(i === req.query.id) {
+                res.send(200,processPage(n,i,contentType));
+              }
+          });
+
           return next;
         }
         else {
