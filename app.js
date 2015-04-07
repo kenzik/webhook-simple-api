@@ -47,6 +47,7 @@ server.get('/content-types', function(req, res, next) {
 
 // Get all content type entries as array: /content-type/foo
 // Get a content type entry as object by slug /content-type/foo?slug=bar
+// Get a content type entry as object by FB key id /content-type/foo?id=-FJfkfjjf234r334fzznFF-
 server.get('/content-type/:type', function(req,res,next) {
 
   var contentType = req.params.type;
@@ -125,7 +126,6 @@ server.get('/content-type/:type', function(req,res,next) {
     // Catch error
   });
 
-
   return next();
 });
 
@@ -165,7 +165,6 @@ function processPage(page,id,contentType) {
 // Functionality from webhook-cms
 // https://github.com/webhook/webhook-cms/issues/225
 //
-/*global uslug*/
 function slugger(item, type, customUrls) {
   var tmpSlug = '';
   tmpSlug = uslug(item.name).toLowerCase();
