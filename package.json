@@ -1,6 +1,6 @@
 {
   "name": "webhook-simple-api",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Webhook Simple API ",
   "main": "app.js",
   "dependencies": {
