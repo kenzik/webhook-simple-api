@@ -4,7 +4,9 @@
     "username": "<webhook username/email>",
     "password": "<webhook password>",
     "secretKey": "<webhook secretKey found in .firebase.conf>",
-    "siteName": "<webhook siteName found in .firebase.conf>"
+    "siteName": "<webhook siteName found in .firebase.conf>",
+    "menusSupport": true,
+    "menusContentType": "menus"    
   },
   "server" : { 
     "name": "Webhook Content API",
