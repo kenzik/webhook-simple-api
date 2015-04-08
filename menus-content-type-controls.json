@@ -1,0 +1,155 @@
+{
+  "menus": {
+    "controls": [
+      {
+        "controlType": "textfield",
+        "hidden": false,
+        "label": "Name",
+        "locked": true,
+        "name": "name",
+        "required": true,
+        "showInCms": true
+      },
+      {
+        "controlType": "datetime",
+        "hidden": true,
+        "label": "Create Date",
+        "locked": true,
+        "name": "create_date",
+        "required": true,
+        "showInCms": false
+      },
+      {
+        "controlType": "datetime",
+        "hidden": true,
+        "label": "Last Updated",
+        "locked": true,
+        "name": "last_updated",
+        "required": true,
+        "showInCms": false
+      },
+      {
+        "controlType": "datetime",
+        "hidden": true,
+        "label": "Publish Date",
+        "locked": true,
+        "name": "publish_date",
+        "required": false,
+        "showInCms": false
+      },
+      {
+        "controlType": "select",
+        "help": "",
+        "hidden": false,
+        "label": "Level",
+        "locked": false,
+        "meta": {
+          "defaultValue": "First",
+          "options": [
+            {
+              "value": "First"
+            },
+            {
+              "value": "Second"
+            }
+          ]
+        },
+        "name": "level",
+        "required": false,
+        "showInCms": true
+      },
+      {
+        "controlType": "number",
+        "help": "This is only required for first level menu items.",
+        "hidden": false,
+        "label": "Sort",
+        "locked": false,
+        "name": "sort",
+        "required": false,
+        "showInCms": true
+      },
+      {
+        "controlType": "relation",
+        "help": "",
+        "hidden": false,
+        "label": "Page",
+        "locked": false,
+        "meta": {
+          "contentTypeId": "pages",
+          "isSingle": true,
+          "reverseName": "menus_page"
+        },
+        "name": "page",
+        "required": false,
+        "showInCms": true
+      },
+      {
+        "controlType": "relation",
+        "help": "Before using this, make sure you've added the child menu items. You can reorder by dragging.\n",
+        "hidden": false,
+        "label": "Children",
+        "locked": false,
+        "meta": {
+          "contentTypeId": "menus",
+          "reverseName": "children"
+        },
+        "name": "children",
+        "required": false,
+        "showInCms": true
+      },
+      {
+        "controlType": "instruction",
+        "help": "",
+        "hidden": false,
+        "label": "Optional Items",
+        "locked": false,
+        "name": "optional_items",
+        "required": false,
+        "showInCms": false
+      },
+      {
+        "controlType": "textfield",
+        "help": "If your design supports it, this will be the menu title in mobile navigation.",
+        "hidden": false,
+        "label": "Mobile Title",
+        "locked": false,
+        "name": "mobile_title",
+        "placeholder": "",
+        "required": false,
+        "showInCms": false
+      },
+      {
+        "controlType": "textfield",
+        "help": "This will override the link to any related page.",
+        "hidden": false,
+        "label": "URL",
+        "locked": false,
+        "name": "url",
+        "required": false,
+        "showInCms": false
+      },
+      {
+        "controlType": "textfield",
+        "hidden": true,
+        "label": "Preview URL",
+        "locked": true,
+        "name": "preview_url",
+        "required": true,
+        "showInCms": false
+      },
+      {
+        "controlType": "textfield",
+        "hidden": true,
+        "label": "Slug",
+        "locked": true,
+        "name": "slug",
+        "required": false,
+        "showInCms": false
+      }
+    ],
+    "individualMD5": "176c9f15ba6f8bfc267f3e854603aac4",
+    "listMD5": "e840ae0a7cc44add4affd6d0f98a44b8",
+    "name": "Menus",
+    "oneOff": false
+  }
+}

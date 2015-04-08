@@ -20,11 +20,17 @@ It supports the following routes:
 2. ```/content-type/:type``` - To retrieve an array of all records for a particular content type
 3. ```/content-type/:type?slug=:slug``` - To retrieve one content type record via slug
 4. ```/content-type/:type?id=:id``` - To retrieve one content type record via firebase ID (useful when walking relationships)
-5. ```/menu``` - This will return a 2-level menu, if you have it configured. (WIP)
+5. ```/menu``` - This will return a 2-level menu, if you have it configured. (WIP -- See notes)
 
 When requesting content via a slug (#3), it will check for an explicit slug first (set during content creation). If it does not have a set slug, it will compare the slug parameter to a default slug (see note below.)
 
-### Issues/Notes
+
+### Menus Notes
+
+You need a specific menu structure. See menus-content-type-controls.json and app.js code for more details.
+
+
+### General Notes
 
 * I post-process each entry to add (1) the key ID; and (2) the slug. 
 * When adding the slug, I ignore everything before and including the first '/', eg. '#/' is stripped. 
@@ -34,6 +40,8 @@ When requesting content via a slug (#3), it will check for an explicit slug firs
 
 ### TODO
 
+* Settings
 * Caching
-* Add Page info to menu result
+* Refactor to modularize
+* More documentation
 
