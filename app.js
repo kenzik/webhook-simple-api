@@ -168,7 +168,7 @@ function getContentTypes() {
 }
 
 function getEntries(contentType) {
-  var entries = [];
+  var entries = {};
 
   var deferred = Q.defer();
   
@@ -190,10 +190,12 @@ function getEntries(contentType) {
       _.forEach(s, function(n,i) {
         // We have a special case for a page entry
         if(contentType == 'pages') {
-          entries.push(processContentEntry(n,i,contentType));
+          var processedEntry = processContentEntry(n,i,contentType);
+          entries[processedEntry.slug]=processedEntry;
         } else {
           // Send it back as-is
-          entries.push(n); 
+          var processedEntry = processContentEntry(n,i,contentType);
+          entries[processedEntry.slug]=processedEntry;
         }
       });
     } else {
@@ -207,25 +209,6 @@ function getEntries(contentType) {
   });  
 
   return deferred.promise;  
-}
-
-function getMenus() {
-  // TODO: Add/process page for Urls
-
-  var deferred = Q.defer();
-  if(structuredMenus.length > 0) {
-    deferred.resolve(structuredMenus);
-  } else {
-    _.forEach(origMenus, function(menu, mi) {
-      
-      if(menu.level === 'First') {
-        // console.log("Level 1 Processing: " + menu.name + ' - ' + menu['_id']);
-        structuredMenus.push(replaceChildren(menu));
-      }
-    });
-    deferred.resolve(structuredMenus);
-  }
-  return deferred.promise;
 }
 
 function getEntry(contentType, slug, id) {
@@ -290,6 +273,25 @@ function getEntry(contentType, slug, id) {
 
   return deferred.promise;
 
+}
+
+function getMenus() {
+  // TODO: Add/process page for Urls
+
+  var deferred = Q.defer();
+  if(structuredMenus.length > 0) {
+    deferred.resolve(structuredMenus);
+  } else {
+    _.forEach(origMenus, function(menu, mi) {
+      
+      if(menu.level === 'First') {
+        // console.log("Level 1 Processing: " + menu.name + ' - ' + menu['_id']);
+        structuredMenus.push(replaceChildren(menu));
+      }
+    });
+    deferred.resolve(structuredMenus);
+  }
+  return deferred.promise;
 }
 
 // Potatos
