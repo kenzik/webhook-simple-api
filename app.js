@@ -37,7 +37,6 @@ FB.child('contentType').on('value', function(s) {
   contentTypes = s.val();
 });
 
-
 // Menu stuff
 var structuredMenus=[]; // structured with complete children structure
 var origMenus={}; // original structure from firebase with ID
@@ -101,6 +100,7 @@ server.get('/content-type/:type', function(req,res,next) {
   var contentType = req.params.type;
   var slug = req.query.slug || false;
   var id = req.query.id || false;
+  var asArray = req.query.array || false;
 
   if(slug || id) {
     getEntry(contentType,slug,id).then(
@@ -112,7 +112,7 @@ server.get('/content-type/:type', function(req,res,next) {
     );
   } 
   else if(!slug && !id) {
-    getEntries(contentType).then(
+    getEntries(contentType,asArray).then(
       function(data) {
         res.send(200,data);
       }, function(err) {
@@ -167,7 +167,7 @@ function getContentTypes() {
   return deferred.promise;
 }
 
-function getEntries(contentType) {
+function getEntries(contentType, asArray) {
   var entries = {};
 
   var deferred = Q.defer();
@@ -203,7 +203,7 @@ function getEntries(contentType) {
       deferred.resolve(s);
     }
 
-    deferred.resolve(entries);
+    deferred.resolve(asArray ? _.values(entries) : entries) ;
   }, function(e) {
     deferred.reject(e);
   });  
