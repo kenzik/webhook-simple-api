@@ -37,6 +37,13 @@ FB.child('contentType').on('value', function(s) {
   contentTypes = s.val();
 });
 
+// Seed location types
+var locationTypes = false;
+FB.child('data/locationtypes').on('value', function(s) {
+  locationTypes = s.val();
+//  console.log(locationTypes);
+});
+
 // Menu stuff
 var structuredMenus=[]; // structured with complete children structure
 var origMenus={}; // original structure from firebase with ID
@@ -143,6 +150,17 @@ server.get('/menu', function(req, res, next) {
   return next;
 });
 
+
+// Location Support
+server.get('/locations', function(req, res, next){
+  getLocations().then(function(data) {
+    res.send(200,data);
+  }, function(err) {
+    res.send(500,error);
+  });
+  return next;
+});
+
 // End Routes
 
 // Listen
@@ -234,6 +252,7 @@ function getEntry(contentType, slug, id) {
 
   // id takes priority
   if(id) {
+    // console.log("Looking up " + contentType + " with ID: " + id);
     FB.child('data/' + contentType + '/' + id).once('value', function(s) {
       entryLocated = true;
       deferred.resolve(processContentEntry(s.val(),id, contentType));
@@ -291,6 +310,25 @@ function getMenus() {
     });
     deferred.resolve(structuredMenus);
   }
+  return deferred.promise;
+}
+
+function getLocations() {
+  var deferred = Q.defer();
+
+  // Grab/watch all locations
+  FB.child('data/locations').on('value', function(snap) {
+    var s = snap.val();
+    var processedLocations = [];
+    // Walk locations
+    _.forEach(s, function(l, li) {
+      l['_id'] = li;
+      l.location_type = locationTypes[l.location_type.split(' ')[1]];
+      processedLocations.push(l)
+    });
+    deferred.resolve(processedLocations);
+  });
+
   return deferred.promise;
 }
 
