@@ -107,10 +107,11 @@ server.get('/content-type/:type', function(req,res,next) {
   var contentType = req.params.type;
   var slug = req.query.slug || false;
   var id = req.query.id || false;
-  var asArray = req.query.array || false;
+  var asArray = req.query.array || false; //?array=true
+  var expandRelated = req.query.expand || false; //?expand=true
 
   if(slug || id) {
-    getEntry(contentType,slug,id).then(
+    getEntry(contentType,slug,id,expandRelated).then(
       function(data) {
         res.send(200,data);
       }, function(err) {
@@ -119,7 +120,7 @@ server.get('/content-type/:type', function(req,res,next) {
     );
   } 
   else if(!slug && !id) {
-    getEntries(contentType,asArray).then(
+    getEntries(contentType,asArray,expandRelated).then(
       function(data) {
         res.send(200,data);
       }, function(err) {
@@ -185,7 +186,7 @@ function getContentTypes() {
   return deferred.promise;
 }
 
-function getEntries(contentType, asArray) {
+function getEntries(contentType, asArray, expandRelated) {
   var entries = {};
 
   var deferred = Q.defer();
@@ -208,19 +209,24 @@ function getEntries(contentType, asArray) {
       _.forEach(s, function(n,i) {
         // We have a special case for a page entry
         if(contentType == 'pages') {
-          var processedEntry = processContentEntry(n,i,contentType);
+          var processedEntry = processContentEntry(n,i,contentType,expandRelated);
           entries[processedEntry.slug]=processedEntry;
         } else {
           // Send it back as-is
-          var processedEntry = processContentEntry(n,i,contentType);
-          entries[processedEntry.slug]=processedEntry;
+          console.log("Processing!");
+          processContentEntry(n,i,contentType,expandRelated).then(
+            function(processedEntry) {
+              entries[processedEntry.slug]=processedEntry;
+              //console.log("Entry", processedEntry);
+            }
+          );
         }
       });
     } else {
       // One off. Just send it all back.
       deferred.resolve(s);
     }
-
+    console.log("Sending back: ", entries);
     deferred.resolve(asArray ? _.values(entries) : entries) ;
   }, function(e) {
     deferred.reject(e);
@@ -229,7 +235,7 @@ function getEntries(contentType, asArray) {
   return deferred.promise;  
 }
 
-function getEntry(contentType, slug, id) {
+function getEntry(contentType, slug, id, expandRelated) {
 
   var deferred = Q.defer();
 
@@ -255,7 +261,7 @@ function getEntry(contentType, slug, id) {
     // console.log("Looking up " + contentType + " with ID: " + id);
     FB.child('data/' + contentType + '/' + id).once('value', function(s) {
       entryLocated = true;
-      deferred.resolve(processContentEntry(s.val(),id, contentType));
+      deferred.resolve(processContentEntry(s.val(),id, contentType, expandRelated));
     }, function(e) {
       deferred.reject(e);
     });
@@ -267,7 +273,7 @@ function getEntry(contentType, slug, id) {
       _.forEach(s.val(), function(n, i) {
         
         // Clean things up a bit
-        entry = processContentEntry(n,i,contentType);
+        entry = processContentEntry(n,i,contentType, expandRelated);
 
         // We found a slug that matches the request, send it back
         if(entry.slug === slug) {
@@ -395,8 +401,10 @@ function fbAuthHandler(err,authData) {
   }
 }
 
-function processContentEntry(entry,id,contentType) {  
+function processContentEntry(entry,id,contentType,expandRelated) {  
   if(!entry) return false;
+  var deferred = Q.defer();
+
   entry['_id']=id;
 
   if(!entry.slug) {
@@ -407,7 +415,42 @@ function processContentEntry(entry,id,contentType) {
     entry['slug']=entrySlug.substring(entrySlug.indexOf('/') + 1);
   }
 
-  return entry;
+  if(expandRelated) {
+    console.log("Expanding relations in " + contentType + ' - ' + id);
+    // console.log(contentTypes[contentType]);
+    var relationFields={};
+
+    // Get the relation field for this type
+    _.forEach(contentTypes[contentType].controls, function(v,k) {
+      if(v.controlType === 'relation') {
+         console.log("Checking relation...");
+         if(_.indexOf(relationFields,v.name) === -1) {
+          console.log("FOUND " + v.name);
+
+          relationFields[v.name]=v.meta.contentTypeId;
+         }
+      }
+    });
+    console.log("Fields to walk: ", relationFields);
+    _.forEach(relationFields,function(v,k) {
+      // Go get the entry
+      console.log(v,k);
+      // getEntry(v, slug, id, expandRelated)
+      getEntry(v,false,entry[k].split(' ')[1],false).then(
+        function(result) {
+          console.log("Added " + result.name + " to object");
+          entry[k]=result;
+          //console.log(entry);
+          deferred.resolve(entry);
+        }
+      );
+    });
+  } else {
+    deferred.resolve(entry);
+  }
+
+  return deferred.promise;
+
 }
 
 
