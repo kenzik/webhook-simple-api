@@ -37,6 +37,13 @@ FB.child('contentType').on('value', function(s) {
   contentTypes = s.val();
 });
 
+// Seed location types
+var locationTypes = false;
+FB.child('data/locationtypes').on('value', function(s) {
+  locationTypes = s.val();
+//  console.log(locationTypes);
+});
+
 // Menu stuff
 var structuredMenus=[]; // structured with complete children structure
 var origMenus={}; // original structure from firebase with ID
@@ -136,6 +143,17 @@ server.get('/content-type/:type', function(req,res,next) {
 //
 server.get('/menu', function(req, res, next) {
   getMenus().then(function(data) {
+    res.send(200,data);
+  }, function(err) {
+    res.send(500,error);
+  });
+  return next;
+});
+
+
+// Location Support
+server.get('/locations', function(req, res, next){
+  getLocations().then(function(data) {
     res.send(200,data);
   }, function(err) {
     res.send(500,error);
@@ -291,6 +309,25 @@ function getMenus() {
     });
     deferred.resolve(structuredMenus);
   }
+  return deferred.promise;
+}
+
+function getLocations() {
+  var deferred = Q.defer();
+
+  // Grab/watch all locations
+  FB.child('data/locations').on('value', function(snap) {
+    var s = snap.val();
+    var processedLocations = [];
+    // Walk locations
+    _.forEach(s, function(l, li) {
+      l['_id'] = li;
+      l.location_type = locationTypes[l.location_type.split(' ')[1]];
+      processedLocations.push(l)
+    });
+    deferred.resolve(processedLocations);
+  });
+
   return deferred.promise;
 }
 
