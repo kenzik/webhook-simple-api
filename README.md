@@ -42,6 +42,7 @@ You need a specific menu structure. See menus-content-type-controls.json and app
 
 * Settings
 * Caching
+* Automatically expand content type relationships
 * Refactor to modularize
 * More documentation
 
