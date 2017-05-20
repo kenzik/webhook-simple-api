@@ -18,11 +18,12 @@ FB.authWithPassword({
   password: config.webhook.password
 },fbAuthHandler);
 
-// Setup server
+// Setup server and listen
 var server = restify.createServer( {
   name: config.server.name,
   version: config.server.version
 });
+server.listen(config.server.port);
 
 // Middleware
 server.use(restify.fullResponse());
